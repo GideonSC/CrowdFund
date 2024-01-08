@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Your Name - Web Profile</title>
+    <link rel="stylesheet" href="css/profile.css">
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>Aaron Tech</h1>
+            <p>level:1</p>
+        </div>
+    </header>
+
+
+    <section class="skills">
+        <div class="container">
+            <h2>Personal Info</h2>
+            <ul id="skillsList">
+                <li>Account No:</li>
+                <li>Account name:</li>
+                <li>Bank</li>
+                <li>Email</li>
+            </ul>
+            <button id="editSkillsBtn" onclick="openEditSkillsModal()">Update</button>
+        </div>
+    </section>
+
+    <!-- Edit Skills Modal -->
+    <div id="editSkillsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditSkillsModal()">&times;</span>
+            <h2>Update details</h2>
+            <p class="tagme">Make sure your details are correctly field!</p>
+            <form id="editSkillsForm">
+
+                <!-- Skills will be dynamically inserted here -->
+                <button type="button" onclick="saveSkillsChanges()">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ... other sections ... -->
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Your Name. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/profile.js"></script>
+</body>
+</html>
