@@ -1,0 +1,36 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOUR ID</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="container">
+        <h1>Login</h1>
+        <form id="loginForm">
+            <input type="text" placeholder="Username" required>
+            <input type="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <p class="switch">Don't have an account? <a href="#" onclick="toggleForm()">Sign Up</a></p>
+    </div>
+
+    <div id="container" style="display: none;">
+        <h1>Sign Up</h1>
+        <form id="signupForm">
+            <input type="text" placeholder="Full Name" required>
+            <input type="text" placeholder="Username" required>
+            <input type="email" placeholder="Email Address" required>
+            <input type="tel" placeholder="Phone Number" required>
+            <input type="password" placeholder="Password" required>
+            <input type="password" placeholder="Password Confirmation" required>
+            <button type="submit" id="payment">Pay N4,000</button>
+
+        </form>
+        <p class="switch">Already have an account? <a href="#" onclick="toggleForm()">Login</a></p>
+    </div>
+
+   <script src="app.js"></script>
+</body>
+</html>
