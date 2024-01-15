@@ -1,0 +1,21 @@
+{
+  "name": "crowdfund",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev":"nodemon app",
+    "start":"node app"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GideonSC/CrowdFund.git"
+  },
+  "keywords": [],
+  "author": "Abdullahi Sadiq",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GideonSC/CrowdFund/issues"
+  },
+  "homepage": "https://github.com/GideonSC/CrowdFund#readme"
+}
