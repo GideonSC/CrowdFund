@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 const Schema = require("./schema");
 const sendEmail = require("./sendMail");
 const bcrypt = require("bcryptjs");
+const Axios = require("axios");
+const randGen = require("./randomNum");
 const app = express();
 
 app.set("view engine", "ejs");
@@ -78,7 +80,45 @@ app.get("/verify/:token", (req, res) => {
         if (err) {
           throw err;
         } else {
-          console.log(decoded);
+          // Already decoded
+          const { fullname, password, username, number, email } = decoded;
+
+          const User = new Schema.User({
+            fullname,
+            password,
+            username,
+            phoneNumber: number,
+            email,
+            level: 0,
+            wallet: 0,
+          });
+          const price = 4000;
+          const body = JSON.stringify({
+            tx_ref: new Buffer(randGen(6), "base64"),
+            amount: price,
+            currency: "NGN",
+            customer: {
+              email,
+            },
+            redirect_url: "http://localhost:5000/", // Change this to actual route
+          });
+          User.save()
+            .then(() => {
+              // Move to payment
+              Axios("https://api.flutterwave.com/v3/payments", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                  Authorization: `Bearer ${process.env.FLW_SECRECT_KEY}`,
+                },
+                body: body,
+              });
+            })
+            .catch((e) => {
+              req.flash("message", "Error Signing you up");
+              res.redirect("/id");
+            });
         }
       });
     } else {
