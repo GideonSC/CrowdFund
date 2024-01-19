@@ -182,9 +182,7 @@ function SignBlock(req, res, next) {
       throw "No cookie present";
     }
   } catch (error) {
-    console.log(error);
-    req.flash("message", "Please Sign in");
-    res.redirect("/id");
+    next();
   }
 }
 
