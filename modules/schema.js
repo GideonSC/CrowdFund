@@ -28,7 +28,7 @@ const User = new mongoose.Schema(
       type: String,
     },
     level: {
-      type: String,
+      type: Number,
       required: true,
     },
     wallet: {
@@ -46,6 +46,10 @@ const TXN = new mongoose.Schema(
     },
     status: {
       type: String,
+      required: true,
+    },
+    amount: {
+      type: Number,
       required: true,
     },
     owner: {

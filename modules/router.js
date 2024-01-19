@@ -3,9 +3,15 @@ const jwt = require("jsonwebtoken");
 const Schema = require("./schema");
 const sendEmail = require("./sendMail");
 const bcrypt = require("bcryptjs");
-const Axios = require("axios");
-const randGen = require("./randomNum");
+const Axios = require("request-promise");
+const random = require("./randomNum");
 const app = express();
+
+var cookieopts = {
+  maxAge: 60 * 300 * 1000,
+  httpOnly: true,
+  sameSite: "lax",
+};
 
 app.set("view engine", "ejs");
 
@@ -55,7 +61,7 @@ app.post("/signup", (req, res) => {
             })
             .catch((err) => {
               console.log(err);
-              req.flash("message", "Error sending to email");
+              req.flash("message", "Error sending to email.");
               res.redirect("/id");
             });
         } else {
@@ -72,60 +78,182 @@ app.post("/signup", (req, res) => {
   }
 });
 
+app.post("/signin", signin);
+
+async function signin(req, res) {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      throw "Fields cannot be blank";
+    } else {
+      Schema.User.findOne({ email })
+        .then(async (data) => {
+          const $password = await bcrypt.compare(password, data.password);
+          if ($password) {
+            const token = jwt.sign({ id: data._id }, process.env.SECRET, {
+              expiresIn: "5hrs",
+            });
+            res.cookie("user", token, cookieopts);
+            res.redirect("/dashboard", { data });
+          } else throw $password;
+        })
+        .catch((err) => {
+          console.log(err);
+          req.flash("message", "Error signing you in.");
+          res.redirect("/id");
+        });
+    }
+  } catch (err) {
+    console.log(err);
+    req.flash("message", "Error signing you in.");
+    res.redirect("/id");
+  }
+} // sign in function
+
+function Block(req, res) {
+  // Blocks from accessing if not signed in
+}
 app.get("/verify/:token", (req, res) => {
   try {
     const { token } = req.params;
     if (token) {
-      jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {
-          throw err;
-        } else {
-          // Already decoded
-          const { fullname, password, username, number, email } = decoded;
-
-          const User = new Schema.User({
-            fullname,
-            password,
-            username,
-            phoneNumber: number,
-            email,
-            level: 0,
-            wallet: 0,
-          });
-          const price = 4000;
-          const body = JSON.stringify({
-            tx_ref: new Buffer(randGen(6), "base64"),
-            amount: price,
-            currency: "NGN",
-            customer: {
-              email,
-            },
-            redirect_url: "http://localhost:5000/", // Change this to actual route
-          });
-          User.save()
-            .then(() => {
-              // Move to payment
-              Axios("https://api.flutterwave.com/v3/payments", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Accept: "application/json",
-                  Authorization: `Bearer ${process.env.FLW_SECRECT_KEY}`,
-                },
-                body: body,
+      jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+        try {
+          if (err) {
+            throw err;
+          } else {
+            // Already decoded
+            const { fullname, password, username, number, email } = decoded;
+            const $user_check = await Schema.User.findOne({ email });
+            if ($user_check) {
+              req.flash("message", "Token Expired");
+              res.redirect("/id"); //User found verification code expired
+            } else {
+              const User = new Schema.User({
+                fullname,
+                password,
+                username,
+                phoneNumber: number,
+                email,
+                level: 0,
+                wallet: 0,
               });
-            })
-            .catch((e) => {
-              req.flash("message", "Error Signing you up");
-              res.redirect("/id");
-            });
+              const price = 2000;
+              const tx_ref = random(10);
+
+              const body = JSON.stringify({
+                tx_ref,
+                amount: price,
+                currency: "NGN",
+                payment_options: "card, ussd, banktransfer",
+                customer: {
+                  email,
+                  name: fullname,
+                },
+                redirect_url: `http://localhost:5000/pay-ver/${Buffer.from(
+                  tx_ref
+                ).toString("base64")}`, // Change this to actual route
+              });
+
+              User.save()
+                .then(async (data) => {
+                  // Move to payment
+                  const TXN = new Schema.TXN({
+                    amount: price,
+                    ref: tx_ref,
+                    owner: data._id,
+                    status: "pending",
+                  });
+                  await TXN.save();
+                  Axios("https://api.flutterwave.com/v3/payments", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Accept: "application/json",
+                      Authorization: `Bearer ${process.env.SECRET_FLW}`,
+                    },
+                    body: body,
+                  })
+                    .then(($) => {
+                      const resp = JSON.parse($);
+                      res.redirect(resp.data.link); // Redirect to flutterwave place
+                    })
+                    .catch((err) => {
+                      console.log(err);
+                      req.flash("message", "Error Signing you up");
+                      res.redirect("/id");
+                    });
+                })
+                .catch((e) => {
+                  console.log(e);
+                  req.flash("message", "Error Signing you up");
+                  res.redirect("/id");
+                });
+            }
+          }
+        } catch (error) {
+          req.flash("message", "Token mismatch");
+          res.redirect("/id");
         }
       });
     } else {
       throw "No token found";
     }
   } catch (err) {
+    console.log(err);
     req.flash("message", "Token mismatch");
+    res.redirect("/id");
+  }
+});
+
+app.get("/pay-ver/:ref", async (req, res) => {
+  try {
+    const $ = req.params.ref;
+
+    const ref = Buffer.from($, "base64").toString("utf-8");
+    const { status } = req.query;
+    if (status == "cancelled") {
+      await Schema.TXN.findOneAndUpdate(
+        { ref },
+        {
+          status,
+        }
+      );
+      req.flash("message", "Failed Transaction");
+      res.redirect("/id");
+    } else if (status == "successful") {
+      Schema.TXN.findOne({ ref }).then(($data) => {
+        if ($data) {
+          Schema.User.findById($data.owner)
+            .then((data) => {
+              if (data) {
+                // If user found update transaction to found and edit level.
+                Schema.User.findByIdAndUpdate(data._id, {
+                  wallet: data.wallet + $data.amount, // adding to the inital wallet amount
+                  level: 1, // set to level 1
+                })
+                  .then(() => {
+                    res.redirect("/");
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    req.flash("message", "Failed Transaction");
+                    res.redirect("/id");
+                  });
+              } else throw 0;
+            })
+            .catch((err) => {
+              console.log(err);
+              req.flash("message", "Invalid Transaction detected.");
+              res.status(404).redirect("/id");
+            });
+        } else throw 0;
+      });
+    } else {
+      throw "invalid txn status";
+    }
+  } catch (error) {
+    req.flash("message", "Error Validating Transaction.");
     res.redirect("/id");
   }
 });
@@ -142,6 +270,7 @@ app.get("/dashboard", (req, res) => {
 app.get("/testimonial", (req, res) => {
   res.render("testimonial");
 });
+
 app.get("/profile", (req, res) => {
   res.render("profile");
 });
