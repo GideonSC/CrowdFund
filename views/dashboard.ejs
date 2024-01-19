@@ -89,7 +89,7 @@
       <div class="saluteme">
         <br />
         <span id="welcome_user"
-          >Welcome, <span id="user_name">Aaron</span>.</span
+          >Welcome, <span id="user_name"><%=user.fullname %></span>.</span
         >
       </div>
       <!-- Count Down for withdrawal -->
@@ -101,14 +101,16 @@
       </div>
       <!--  End Of Count Down -->
 
-      <span id="myBalance">Balance: <span class="main_Bal">N2000</span></span>
+      <span id="myBalance"
+        >Balance: <span class="main_Bal">N<%=user.wallet%></span></span
+      >
 
       <div class="dashboard">
         <div class="profile-info">
           <span>Profile Email </span>
-          <div id="profile_email">Aaron@example.com</div>
+          <div id="profile_email"><%=user.email%></div>
           <span>Current Level</span>
-          <div id="level">1</div>
+          <div id="level"><%=user.level%></div>
           <div class="balance-buttons">
             <button id="showForm">
               <a href="Withdrawal">Withdraw</a>
@@ -128,9 +130,7 @@
           </ul>
           <div>
             <label for="referralLink">Your Referral Link:</label>
-            <textarea id="referralLink" rows="4" readonly>
- exampleUVXBuhcu192 </textarea
-            >
+            <input value=" <%=user._id%>" id="referralLink" rows="4" readonly />
           </div>
 
           <!-- Copy Button -->

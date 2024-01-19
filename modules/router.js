@@ -8,7 +8,7 @@ const random = require("./randomNum");
 const app = express();
 
 var cookieopts = {
-  maxAge: 60 * 300 * 1000,
+  maxAge: 60 * 300 * 1000, // 15hrs
   httpOnly: true,
   sameSite: "lax",
 };
@@ -90,11 +90,11 @@ async function signin(req, res) {
         .then(async (data) => {
           const $password = await bcrypt.compare(password, data.password);
           if ($password) {
-            const token = jwt.sign({ id: data._id }, process.env.SECRET, {
+            const token = jwt.sign({ id: data._id }, process.env.JWT_SECRET, {
               expiresIn: "5hrs",
             });
             res.cookie("user", token, cookieopts);
-            res.redirect("/dashboard", { data });
+            res.redirect("/dashboard");
           } else throw $password;
         })
         .catch((err) => {
@@ -110,9 +110,84 @@ async function signin(req, res) {
   }
 } // sign in function
 
-function Block(req, res) {
+function Block(req, res, next) {
   // Blocks from accessing if not signed in
+  try {
+    const { user } = req.cookies;
+    if (user) {
+      jwt.verify(user, process.env.JWT_SECRET, (err, decoded) => {
+        try {
+          if (err) {
+            throw err;
+          } else {
+            // console.log(decoded);
+            Schema.User.findById(decoded.id)
+              .then((d) => {
+                if (d) {
+                  req.user = decoded.id;
+                  next();
+                } else throw "Not Found";
+              })
+              .catch((err) => {
+                req.flash("message", "Please Sign in");
+                res.redirect("/id");
+              });
+          }
+        } catch (error) {
+          req.flash("message", "Please Sign in");
+          res.redirect("/id");
+        }
+      });
+    } else {
+      console.log(res.cookie);
+      throw "No cookie present";
+    }
+  } catch (error) {
+    console.log(error);
+    req.flash("message", "Please Sign in");
+    res.redirect("/id");
+  }
 }
+
+function SignBlock(req, res, next) {
+  // Allows if in ID
+  try {
+    const { user } = req.cookies;
+    if (user) {
+      jwt.verify(user, process.env.JWT_SECRET, (err, decoded) => {
+        try {
+          if (err) {
+            throw err;
+          } else {
+            // console.log(decoded);
+            Schema.User.findById(decoded.id)
+              .then((d) => {
+                if (d) {
+                  req.user = decoded.id;
+                  res.redirect("/dashboard");
+                } else throw "Not Found";
+              })
+              .catch((err) => {
+                next();
+              });
+          }
+        } catch (error) {
+          next();
+          // req.flash("message", "Please Sign in");
+          // res.redirect("/id");
+        }
+      });
+    } else {
+      console.log(res.cookie);
+      throw "No cookie present";
+    }
+  } catch (error) {
+    console.log(error);
+    req.flash("message", "Please Sign in");
+    res.redirect("/id");
+  }
+}
+
 app.get("/verify/:token", (req, res) => {
   try {
     const { token } = req.params;
@@ -138,7 +213,7 @@ app.get("/verify/:token", (req, res) => {
                 level: 0,
                 wallet: 0,
               });
-              const price = 2000;
+              const price = 4000;
               const tx_ref = random(10);
 
               const body = JSON.stringify({
@@ -159,7 +234,7 @@ app.get("/verify/:token", (req, res) => {
                 .then(async (data) => {
                   // Move to payment
                   const TXN = new Schema.TXN({
-                    amount: price,
+                    amount: 1000,
                     ref: tx_ref,
                     owner: data._id,
                     status: "pending",
@@ -223,7 +298,8 @@ app.get("/pay-ver/:ref", async (req, res) => {
       res.redirect("/id");
     } else if (status == "successful") {
       Schema.TXN.findOne({ ref }).then(($data) => {
-        if ($data) {
+        if ($data && $data.status != "paid") {
+          // Check if transaction reference is not already paid
           Schema.User.findById($data.owner)
             .then((data) => {
               if (data) {
@@ -232,8 +308,19 @@ app.get("/pay-ver/:ref", async (req, res) => {
                   wallet: data.wallet + $data.amount, // adding to the inital wallet amount
                   level: 1, // set to level 1
                 })
-                  .then(() => {
-                    res.redirect("/");
+                  .then(async () => {
+                    await Schema.TXN.findByIdAndUpdate($data._id, {
+                      status: "paid",
+                    });
+                    const token = jwt.sign(
+                      { id: data._id },
+                      process.env.JWT_SECRET,
+                      {
+                        expiresIn: "5hrs",
+                      }
+                    );
+                    res.cookie("user", token, cookieopts);
+                    // Payment verification
                   })
                   .catch((err) => {
                     console.log(err);
@@ -264,22 +351,30 @@ app.get("/", (req, res) => {
 app.get("/about", (req, res) => {
   res.render("about");
 });
-app.get("/dashboard", (req, res) => {
-  res.render("dashboard");
+app.get("/dashboard", Block, async (req, res) => {
+  const user = await Schema.User.findById(req.user);
+  res.render("dashboard", { user });
 });
 app.get("/testimonial", (req, res) => {
   res.render("testimonial");
 });
 
-app.get("/profile", (req, res) => {
-  res.render("profile");
+app.get("/profile", Block, async (req, res) => {
+  const user = await Schema.User.findById(req.user);
+  res.render("profile", { user });
 });
-app.get("/id", (req, res) => {
+app.get("/id", SignBlock, (req, res) => {
   res.render("id", { flash: req.flash("message") });
 });
 app.get("/contact", (req, res) => {
   res.render("contact");
 });
+
+app.delete("/logout", (req, res) => {
+  res.clearCookie("user");
+  res.redirect("/");
+});
+
 app.use((req, res) => {
   // 404 page
   res.send("Page not found");
