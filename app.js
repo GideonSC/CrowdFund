@@ -17,6 +17,7 @@ app.use(
     saveUninitialized: false,
   })
 );
+app.set("views", path.join(__dirname + `/views`));
 app.use(cookie(process.env.COOKIE_SECRET));
 app.use(express.json({ extended: true }));
 app.use(express.urlencoded({ extended: true }));
