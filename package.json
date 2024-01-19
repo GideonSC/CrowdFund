@@ -2,7 +2,7 @@
   "name": "crowdfund",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "dev": "nodemon app",
     "start": "node app"
@@ -27,10 +27,8 @@
     "express": "^4.18.2",
     "express-flash": "^0.0.2",
     "express-session": "^1.17.3",
-    "got": "^14.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.4",
-    "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.8",
     "request-promise": "^4.2.6"
   }
