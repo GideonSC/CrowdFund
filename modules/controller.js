@@ -1,5 +1,15 @@
 const x = require("./schema");
+const jwt = require("jsonwebtoken");
+const Pay = require("./pay");
 const { User } = x;
+const random = require("./randomNum");
+
+const cookieopts = {
+  maxAge: 60 * 300 * 1000, // 15hrs
+  httpOnly: true,
+  sameSite: "lax",
+};
+
 module.exports.levelAuth = (req, res, done) => {
   User.findById(req.user)
     .then(async (data) => {
@@ -51,4 +61,31 @@ module.exports.levelAuth = (req, res, done) => {
       req.flash("message", "Please Login");
       res.redirect("/id");
     });
+};
+module.exports.payAuth = async (req, res) => {
+  // Check level
+  const user = await User.findById(req.user);
+  if (user.level.level <= 0) {
+    // User has not signed up
+    Pay({
+      price: 4000,
+      tx_ref: random(10),
+      txn_p: 1000,
+      owner: user,
+    })
+      .then((data) => {
+        res.redirect(data);
+      })
+      .catch((err) => {
+        console.log(err);
+        req.flash("message", "Failed to initiate payment.");
+        res.redirect("/id");
+      });
+  } else {
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "5hrs",
+    });
+    res.cookie("user", token, cookieopts);
+    res.redirect("/dashboard");
+  }
 };

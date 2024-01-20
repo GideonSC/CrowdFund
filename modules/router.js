@@ -6,6 +6,7 @@ const bcrypt = require("bcryptjs");
 const Axios = require("request-promise");
 const random = require("./randomNum");
 const Controller = require("./controller");
+const { sendMail } = require("./transporter");
 const app = express();
 
 var cookieopts = {
@@ -81,9 +82,9 @@ app.post("/signup", (req, res) => {
   }
 });
 
-app.post("/signin", signin);
+app.post("/signin", signin, Controller.payAuth);
 
-async function signin(req, res) {
+async function signin(req, res, done) {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -93,11 +94,8 @@ async function signin(req, res) {
         .then(async (data) => {
           const $password = await bcrypt.compare(password, data.password);
           if ($password) {
-            const token = jwt.sign({ id: data._id }, process.env.JWT_SECRET, {
-              expiresIn: "5hrs",
-            });
-            res.cookie("user", token, cookieopts);
-            res.redirect("/dashboard");
+            req.user = data._id;
+            done();
           } else {
             req.flash("message", "Incorrect Email or Password");
             res.redirect("/id");
@@ -217,7 +215,6 @@ app.get("/verify/:token", (req, res) => {
               });
               const price = 4000;
               const tx_ref = random(10);
-
               const body = JSON.stringify({
                 tx_ref,
                 amount: price,
@@ -329,7 +326,11 @@ app.get("/pay-ver/:ref", async (req, res) => {
                     }); // Crediting referer
                   Schema.User.findByIdAndUpdate(data._id, {
                     wallet: data.wallet + $data.amount, // adding to the inital wallet amount
-                    level: { level: 1, date: new Date(), updated: false }, // set to level 1
+                    level: {
+                      level: data.level + 1,
+                      date: new Date(),
+                      updated: false,
+                    }, // set to level 1
                   })
                     .then(async () => {
                       await Schema.TXN.findByIdAndUpdate($data._id, {
@@ -416,8 +417,26 @@ app.delete("/logout", (req, res) => {
   res.end("");
 });
 
-app.put("/withdraw", (req, res) => {
+app.put("/withdraw", Block, async (req, res) => {
   // Withdrawal algorithm
+  const user = await Schema.User.findById(req.user);
+
+  // console.log(new Date().toDateString());
+  // sendEmail({
+  //   title: "Crowd Fund Withdrawal request",
+  //   email: email,
+  //   message: ``,
+  //   subject: "Withdrawal Request",
+  // });
+  //   .then(() => {
+  //     console.log(`Sent email to ${email}`);
+  //     res.render("email_sent");
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //     req.flash("message", "Error sending to email.");
+  //     res.redirect("/id");
+  // });
 });
 
 app.use((req, res) => {
