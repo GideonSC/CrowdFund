@@ -5,6 +5,7 @@ const sendEmail = require("./sendMail");
 const bcrypt = require("bcryptjs");
 const Axios = require("request-promise");
 const random = require("./randomNum");
+const Controller = require("./controller");
 const app = express();
 
 var cookieopts = {
@@ -97,7 +98,10 @@ async function signin(req, res) {
             });
             res.cookie("user", token, cookieopts);
             res.redirect("/dashboard");
-          } else throw $password;
+          } else {
+            req.flash("message", "Incorrect Email or Password");
+            res.redirect("/id");
+          }
         })
         .catch((err) => {
           console.log(err);
@@ -141,7 +145,6 @@ function Block(req, res, next) {
         }
       });
     } else {
-      console.log(res.cookie);
       throw "No cookie present";
     }
   } catch (error) {
@@ -209,7 +212,7 @@ app.get("/verify/:token", (req, res) => {
                 referer: ref,
                 phoneNumber: number,
                 email,
-                level: { level: 0, date: new Date() },
+                level: { level: 0, date: new Date(), updated: false },
                 wallet: 0,
               });
               const price = 4000;
@@ -326,7 +329,7 @@ app.get("/pay-ver/:ref", async (req, res) => {
                     }); // Crediting referer
                   Schema.User.findByIdAndUpdate(data._id, {
                     wallet: data.wallet + $data.amount, // adding to the inital wallet amount
-                    level: { level: 1, date: new Date() }, // set to level 1
+                    level: { level: 1, date: new Date(), updated: false }, // set to level 1
                   })
                     .then(async () => {
                       await Schema.TXN.findByIdAndUpdate($data._id, {
@@ -377,9 +380,9 @@ app.get("/", (req, res) => {
 app.get("/about", (req, res) => {
   res.render("about");
 });
-app.get("/dashboard", Block, async (req, res) => {
+app.get("/dashboard", Block, Controller.levelAuth, async (req, res) => {
   const user = await Schema.User.findById(req.user);
-  res.render("dashboard", { user });
+  res.render("dashboard", { user, withdraw: req.withdraw });
 });
 app.get("/testimonial", (req, res) => {
   res.render("testimonial");
@@ -411,6 +414,10 @@ app.get("/contact", (req, res) => {
 app.delete("/logout", (req, res) => {
   res.clearCookie("user");
   res.end("");
+});
+
+app.put("/withdraw", (req, res) => {
+  // Withdrawal algorithm
 });
 
 app.use((req, res) => {

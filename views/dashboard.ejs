@@ -94,10 +94,10 @@
       </div>
       <!-- Count Down for withdrawal -->
       <div class="countdown" id="countdown">
-        <h1 id="timer">7:00:00:00</h1>
-        <p>Countdown To Withdrawal</p>
         <br />
-        <p id="expiryDate">00</p>
+        <!-- <p id="expiryDate" data-time="<%=user.level.date%>">
+          You can withdraw in the next <span id="time-here"></span> hours
+        </p> -->
       </div>
       <!--  End Of Count Down -->
 
@@ -110,13 +110,32 @@
           <span>Profile Email </span>
           <div id="profile_email"><%=user.email%></div>
           <span>Current Level</span>
-          <div id="level"><%=user.level%></div>
+          <div><%=user.level.level%></div>
           <div class="balance-buttons">
-            <button id="showForm">
-              <a href="Withdrawal">Withdraw</a>
+            <% if (withdraw == true){ %>
+
+            <button
+              onclick="fetch(`/withdraw`, {
+                method: 'PUT',}).then(() => {
+                window.location.href = '/dashboard';
+              });"
+              id="showForm"
+            >
+              Withdraw
             </button>
+
+            <% } %> <% if (withdraw == false){ %>
+
+            <button onclick="alert('You cannot withdraw yet.')" id="showForm">
+              Withdraw
+            </button>
+
+            <!-- <button onclick="alert('You cannot withdraw yet.')" id="showForm">
+              Withdraw
+            </button> -->
+            <% } %>
             <button onclick="reinvest()">
-              <i class="fas fa-sync-alt"></i>Re-Invest
+              <i class="fas fa-sync-alt"></i>Next Level
             </button>
           </div>
         </div>
@@ -124,14 +143,17 @@
           <h3>Referrals</h3>
           <ul id="referralList">
             <!-- Example referral profiles -->
-            <li>Referral 1: gideon</li>
-            <li>Referral 2: gideon</li>
-            <li>Referral 3: gideon</li>
+            <% if(user.referee.length == 0){ %>
+            <span> You have no referral </span>
+            <% } %> <% user.referee.forEach( x => {%>
+            <li>Referral 1: <%= x%></li>
+
+            <% }) %>
           </ul>
           <div>
             <label for="referralLink">Your Referral Link:</label>
             <input
-              value="http://localhost:5000/id/?ref=<%=user._id%>"
+              value="https://www.crowdfunds.com.ng/id/?ref=<%=user._id%>"
               id="referralLink"
               rows="4"
               readonly
