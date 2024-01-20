@@ -16,7 +16,7 @@ var cookieopts = {
 app.set("view engine", "ejs");
 
 app.post("/signup", (req, res) => {
-  const { fullname, username, email, number, password } = req.body;
+  const { fullname, username, email, number, password, ref } = req.body;
   if (
     !fullname.toString().trim() ||
     !email.toString().trim() ||
@@ -39,21 +39,23 @@ app.post("/signup", (req, res) => {
               username,
               email,
               number,
+              ref,
               password: bcrypt.hashSync(password, 10),
             },
             process.env.JWT_SECRET,
             { expiresIn: "30min" }
           );
           // Send to user via nodemailer
+
           sendEmail({
             title: "Crowd Fund Email Verification",
             email: email,
-            message: `Welcome to CrowdFund 
-            ${username}, <br/> please verify your email 
-            by clicking the link below, this process 
+            message: `Welcome to CrowdFund
+            ${username}, <br/> please verify your email
+            by clicking the link below, this process
             is automatic.`,
             subject: "Email Verification",
-            link: `http://localhost:5000/verify/${token}`,
+            link: `https://www.crowdfunds.com.ng/verify/${token}`,
           })
             .then(() => {
               console.log(`Sent email to ${email}`);
@@ -159,7 +161,6 @@ function SignBlock(req, res, next) {
           if (err) {
             throw err;
           } else {
-            // console.log(decoded);
             Schema.User.findById(decoded.id)
               .then((d) => {
                 if (d) {
@@ -173,8 +174,6 @@ function SignBlock(req, res, next) {
           }
         } catch (error) {
           next();
-          // req.flash("message", "Please Sign in");
-          // res.redirect("/id");
         }
       });
     } else {
@@ -196,7 +195,8 @@ app.get("/verify/:token", (req, res) => {
             throw err;
           } else {
             // Already decoded
-            const { fullname, password, username, number, email } = decoded;
+            const { fullname, password, username, number, email, ref } =
+              decoded;
             const $user_check = await Schema.User.findOne({ email });
             if ($user_check) {
               req.flash("message", "Token Expired");
@@ -206,9 +206,10 @@ app.get("/verify/:token", (req, res) => {
                 fullname,
                 password,
                 username,
+                referer: ref,
                 phoneNumber: number,
                 email,
-                level: 0,
+                level: { level: 0, date: new Date() },
                 wallet: 0,
               });
               const price = 4000;
@@ -223,7 +224,8 @@ app.get("/verify/:token", (req, res) => {
                   email,
                   name: fullname,
                 },
-                redirect_url: `http://localhost:5000/pay-ver/${Buffer.from(
+                // redirect_url: `http://localhost:5000/pay-ver/${Buffer.from(
+                redirect_url: `https://crowdfunds.com.ng/pay-ver/${Buffer.from(
                   tx_ref
                 ).toString("base64")}`, // Change this to actual route
               });
@@ -286,6 +288,7 @@ app.get("/pay-ver/:ref", async (req, res) => {
     const ref = Buffer.from($, "base64").toString("utf-8");
     const { status } = req.query;
     if (status == "cancelled") {
+      // for tests
       await Schema.TXN.findOneAndUpdate(
         { ref },
         {
@@ -295,45 +298,70 @@ app.get("/pay-ver/:ref", async (req, res) => {
       req.flash("message", "Failed Transaction");
       res.redirect("/id");
     } else if (status == "successful") {
-      Schema.TXN.findOne({ ref }).then(($data) => {
-        if ($data && $data.status != "paid") {
-          // Check if transaction reference is not already paid
-          Schema.User.findById($data.owner)
-            .then((data) => {
-              if (data) {
-                // If user found update transaction to found and edit level.
-                Schema.User.findByIdAndUpdate(data._id, {
-                  wallet: data.wallet + $data.amount, // adding to the inital wallet amount
-                  level: 1, // set to level 1
-                })
-                  .then(async () => {
-                    await Schema.TXN.findByIdAndUpdate($data._id, {
-                      status: "paid",
-                    });
-                    const token = jwt.sign(
-                      { id: data._id },
-                      process.env.JWT_SECRET,
-                      {
-                        expiresIn: "5hrs",
+      Schema.TXN.findOne({ ref })
+        .then(($data) => {
+          if ($data && $data.status != "paid") {
+            // Check if transaction reference is not already paid
+            Schema.User.findById($data.owner) // New user being created
+              .then((data) => {
+                if (data) {
+                  // If user found, update transaction to found and edit level.
+                  Schema.User.findById(data.referer)
+                    .then((referer_data) => {
+                      if (referer_data) {
+                        Schema.User.findByIdAndUpdate(data.referer, {
+                          wallet: referer_data.wallet + 500,
+                          referee: [...referer_data.referee, data._id],
+                        })
+                          .then((x) => {})
+                          .catch((err) => {
+                            console.log(err);
+                          });
                       }
-                    );
-                    res.cookie("user", token, cookieopts);
-                    // Payment verification
+                    })
+                    .catch((err) => {
+                      console.log(err);
+                      req.flash("message", "Failed Transaction");
+                      res.redirect("/id");
+                    }); // Crediting referer
+                  Schema.User.findByIdAndUpdate(data._id, {
+                    wallet: data.wallet + $data.amount, // adding to the inital wallet amount
+                    level: { level: 1, date: new Date() }, // set to level 1
                   })
-                  .catch((err) => {
-                    console.log(err);
-                    req.flash("message", "Failed Transaction");
-                    res.redirect("/id");
-                  });
-              } else throw 0;
-            })
-            .catch((err) => {
-              console.log(err);
-              req.flash("message", "Invalid Transaction detected.");
-              res.status(404).redirect("/id");
-            });
-        } else throw 0;
-      });
+                    .then(async () => {
+                      await Schema.TXN.findByIdAndUpdate($data._id, {
+                        status: "paid",
+                      });
+                      const token = jwt.sign(
+                        { id: data._id },
+                        process.env.JWT_SECRET,
+                        {
+                          expiresIn: "5hrs",
+                        }
+                      );
+                      res.cookie("user", token, cookieopts);
+                      res.redirect("/dashboard");
+                      // Payment verification
+                    })
+                    .catch((err) => {
+                      console.log(err);
+                      req.flash("message", "Failed Transaction");
+                      res.redirect("/id");
+                    });
+                } else throw 0;
+              })
+              .catch((err) => {
+                console.log(err);
+                req.flash("message", "Invalid Transaction detected.");
+                res.status(404).redirect("/id");
+              });
+          } else throw 0;
+        })
+        .catch((err) => {
+          console.log(err);
+          req.flash("message", "Error Validating Transaction.");
+          res.redirect("/id");
+        });
     } else {
       throw "invalid txn status";
     }
@@ -361,8 +389,20 @@ app.get("/profile", Block, async (req, res) => {
   const user = await Schema.User.findById(req.user);
   res.render("profile", { user });
 });
-app.get("/id", SignBlock, (req, res) => {
-  res.render("id", { flash: req.flash("message") });
+app.get("/id", SignBlock, async (req, res) => {
+  const { ref } = req.query;
+  try {
+    if (ref) {
+      const referrer = await Schema.User.findById(ref);
+      if (referrer) res.render("id", { flash: req.flash("message"), ref });
+      else throw 0;
+    } else {
+      res.render("id", { flash: req.flash("message"), ref: "" });
+    }
+  } catch (error) {
+    req.flash("message", "Referral Code Error");
+    res.redirect(`/id`);
+  }
 });
 app.get("/contact", (req, res) => {
   res.render("contact");
@@ -370,11 +410,11 @@ app.get("/contact", (req, res) => {
 
 app.delete("/logout", (req, res) => {
   res.clearCookie("user");
-  res.redirect("/");
+  res.end("");
 });
 
 app.use((req, res) => {
   // 404 page
-  res.send("Page not found");
+  res.send("Page requested not found <br> <a href='/'>Go home</a>");
 });
 module.exports = app;

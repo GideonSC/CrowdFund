@@ -20,7 +20,8 @@
         <button type="submit">Login</button>
       </form>
       <p class="switch">
-        Don't have an account? <a href="#" onclick="toggleForm()">Sign Up</a>
+        Don't have an account?
+        <span href="" onclick="toggleForm()">Sign Up</span>
       </p>
     </div>
 
@@ -37,6 +38,24 @@
         <input type="text" name="username" placeholder="Username" required />
         <input type="email" name="email" placeholder="Email Address" required />
         <input type="tel" name="number" placeholder="Phone Number" required />
+        <% if(ref) { %>
+        <input
+          id="ref"
+          value="<%=ref%>"
+          readonly
+          name="ref"
+          type="text"
+          placeholder="Referral Code (optional)"
+        />
+        <% }%> <% if(!ref) { %>
+        <input
+          id="ref"
+          value=""
+          name="ref"
+          type="text"
+          placeholder="Referral Code (optional)"
+        />
+        <% } %>
         <input
           id="password"
           type="password"
@@ -53,7 +72,7 @@
         <button type="submit" id="payment">Continue</button>
       </form>
       <p class="switch">
-        Already have an account? <a href="#" onclick="toggleForm()">Login</a>
+        Already have an account? <span onclick="toggleForm()">Login</span>
       </p>
     </div>
     <script>

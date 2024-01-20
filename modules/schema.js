@@ -13,9 +13,6 @@ const User = new mongoose.Schema(
       type: String,
       required: true,
     },
-    referral: {
-      type: String,
-    },
     email: {
       type: String,
       required: true,
@@ -31,8 +28,17 @@ const User = new mongoose.Schema(
       type: String,
     },
     level: {
-      type: Number,
+      type: Object,
       required: true,
+    },
+    referee: {
+      // People you've referred
+      type: Array,
+      default: [],
+    },
+    referer: {
+      // The person that referred you
+      type: String,
     },
     wallet: {
       type: Number,

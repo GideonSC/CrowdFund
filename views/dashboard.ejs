@@ -130,7 +130,12 @@
           </ul>
           <div>
             <label for="referralLink">Your Referral Link:</label>
-            <input value=" <%=user._id%>" id="referralLink" rows="4" readonly />
+            <input
+              value="http://localhost:5000/id/?ref=<%=user._id%>"
+              id="referralLink"
+              rows="4"
+              readonly
+            />
           </div>
 
           <!-- Copy Button -->
