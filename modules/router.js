@@ -58,6 +58,7 @@ app.post("/signup", (req, res) => {
             is automatic.`,
             subject: "Email Verification",
             link: `https://www.crowdfunds.com.ng/verify/${token}`,
+            // link: `http://localhost:5000/verify/${token}`,
           })
             .then(() => {
               console.log(`Sent email to ${email}`);
@@ -284,7 +285,6 @@ app.get("/verify/:token", (req, res) => {
 app.get("/pay-ver/:ref", async (req, res) => {
   try {
     const $ = req.params.ref;
-
     const ref = Buffer.from($, "base64").toString("utf-8");
     const { status } = req.query;
     if (status == "cancelled") {
@@ -297,10 +297,10 @@ app.get("/pay-ver/:ref", async (req, res) => {
       );
       req.flash("message", "Failed Transaction");
       res.redirect("/id");
-    } else if (status == "successful") {
+    } else if (status == "completed") {
       Schema.TXN.findOne({ ref })
         .then(($data) => {
-          if ($data && $data.status != "paid") {
+          if ($data && $data.status != "paid" && $data.status != "cancelled") {
             // Check if transaction reference is not already paid
             Schema.User.findById($data.owner) // New user being created
               .then((data) => {
@@ -320,14 +320,13 @@ app.get("/pay-ver/:ref", async (req, res) => {
                       }
                     })
                     .catch((err) => {
+                      // No referer
                       console.log(err);
-                      req.flash("message", "Failed Transaction");
-                      res.redirect("/id");
                     }); // Crediting referer
                   Schema.User.findByIdAndUpdate(data._id, {
                     wallet: data.wallet + $data.amount, // adding to the inital wallet amount
                     level: {
-                      level: data.level + 1,
+                      level: data.level.level + 1,
                       date: new Date(),
                       updated: false,
                     }, // set to level 1
@@ -370,6 +369,7 @@ app.get("/pay-ver/:ref", async (req, res) => {
       throw "invalid txn status";
     }
   } catch (error) {
+    console.log(error);
     req.flash("message", "Error Validating Transaction.");
     res.redirect("/id");
   }
@@ -391,7 +391,11 @@ app.get("/testimonial", (req, res) => {
 
 app.get("/profile", Block, async (req, res) => {
   const user = await Schema.User.findById(req.user);
-  res.render("profile", { user });
+  res.render("profile", {
+    user,
+    message: req.flash("message"),
+    success: req.flash("success"),
+  });
 });
 app.get("/id", SignBlock, async (req, res) => {
   const { ref } = req.query;
@@ -417,26 +421,64 @@ app.delete("/logout", (req, res) => {
   res.end("");
 });
 
+app.post("/data-change", Block, (req, res) => {
+  const { accNo, accName, bnkName } = req.body;
+  if (
+    !accNo.toString().trim() ||
+    !accName.toString().trim() ||
+    !bnkName.toString().trim()
+  ) {
+    req.flash("message", "Fill in all fields !");
+    res.redirect("/profile");
+  } else {
+    Schema.User.findByIdAndUpdate(req.user, {
+      accountName: accName.toString().trim(),
+      bankName: bnkName.toString().trim(),
+      accountNum: accNo.toString().trim(),
+    })
+      .then((d) => {
+        req.flash("success", "Details updated");
+        res.redirect("/profile");
+      })
+      .catch((err) => {
+        console.log(err);
+        req.flash("message", "Error updating details");
+        res.redirect("/profile");
+      });
+  }
+});
+
 app.put("/withdraw", Block, async (req, res) => {
   // Withdrawal algorithm
   const user = await Schema.User.findById(req.user);
-
+  if (user.bankName && user.accountNum && user.bankName) {
+    // Bank details exist
+    sendEmail({
+      title: "Crowd Fund Withdrawal request",
+      email: user.email,
+      message: `Hello ${user.fullname}, You withdrawal request has been sent for confirmation, the admin will attend to you shortly`,
+      subject: "Withdrawal Request",
+    })
+      .then(() => {
+        // sendEmail({
+        //   title: "Crowd Fund Withdrawal request",
+        //   email: email,
+        //   message: `Hello ${user.fullname}, You withdrawal request has been sent for confirmation, the admin will attend to you shortly`,
+        //   subject: "Withdrawal Request",
+        // })
+        console.log(`Sent email to ${email}`);
+        res.end();
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).end();
+      });
+  } else {
+    res.status(404).json({
+      message: "No bank details, go to profile and edit bank details",
+    });
+  }
   // console.log(new Date().toDateString());
-  // sendEmail({
-  //   title: "Crowd Fund Withdrawal request",
-  //   email: email,
-  //   message: ``,
-  //   subject: "Withdrawal Request",
-  // });
-  //   .then(() => {
-  //     console.log(`Sent email to ${email}`);
-  //     res.render("email_sent");
-  //   })
-  //   .catch((err) => {
-  //     console.log(err);
-  //     req.flash("message", "Error sending to email.");
-  //     res.redirect("/id");
-  // });
 });
 
 app.use((req, res) => {

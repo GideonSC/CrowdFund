@@ -107,6 +107,7 @@
 
       <div class="dashboard">
         <div class="profile-info">
+          <p id="error" style="color: red"></p>
           <span>Profile Email </span>
           <div id="profile_email"><%=user.email%></div>
           <span>Current Level</span>
@@ -125,10 +126,27 @@
             </button>
 
             <% } %> <% if (withdraw == false){ %>
+            <button
+              onclick="fetch(`/withdraw`, {
+                method: 'PUT',}).then((d) => {
+                  if(d.status == 200){
+                    window.location.href = '/dashboard';
+                  }
+                  else if(d.status == 500) {
+                    document.getElementById('error').innerHTML = `There seems to be an error`
 
-            <button onclick="alert('You cannot withdraw yet.')" id="showForm">
+                  }
+                  else {
+                    document.getElementById('error').innerHTML = `Bank details invalid,  please update details before withdrawing`
+
+                  }
+              });"
+            >
               Withdraw
             </button>
+            <!-- <button onclick="alert('You cannot withdraw yet.')" id="showForm">
+              Withdraw
+            </button> -->
 
             <% } %>
             <button onclick="">

@@ -24,6 +24,9 @@ const User = new mongoose.Schema(
     accountNum: {
       type: String,
     },
+    accountName: {
+      type: String,
+    },
     bankName: {
       type: String,
     },

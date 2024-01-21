@@ -4,46 +4,58 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="styles.css" />
-    <title>Your Name - Web Profile</title>
+    <title><%= user.fullname%> - Web Profile</title>
     <link rel="stylesheet" href="css/profile.css" />
   </head>
   <body>
     <header>
       <div class="container">
         <h1><%=user.fullname %></h1>
-        <p>Level: <%=user.level%></p>
+        <p>Level: <%=user.level.level%></p>
       </div>
     </header>
 
     <section class="skills">
       <div class="container">
+        <p id="error" style="color: red"><%= message%></p>
+        <p id="error" style="color: green"><%= success%></p>
         <h2>Personal Info</h2>
-        <ul id="skillsList">
-          <li>Account No:</li>
-          <li>Account name:</li>
-          <li>Bank</li>
-          <li>Email</li>
-        </ul>
-        <button id="editSkillsBtn" onclick="openEditSkillsModal()">
-          Update
-        </button>
+        <form action="/data-change" method="post">
+          <ul id="skillsList">
+            <li>
+              Account No:
+              <input
+                required
+                value="<%= user.accountNum%>"
+                name="accNo"
+                placeholder="Your Withdrawal account number"
+              />
+            </li>
+            <li>
+              Account name:
+              <input
+                value="<%=user.accountName%>"
+                required
+                name="accName"
+                placeholder="Your Withdrawal account name"
+              />
+            </li>
+            <li>
+              BankName:
+              <input
+                value="<%=user.bankName%>"
+                required
+                name="bnkName"
+                placeholder="Your Withdrawal bank name"
+              />
+            </li>
+          </ul>
+          <button id="editSkillsBtn">Update</button>
+        </form>
       </div>
     </section>
 
     <!-- Edit Skills Modal -->
-    <div id="editSkillsModal" class="modal" style="display: none">
-      <div class="modal-content">
-        <span class="close" onclick="closeEditSkillsModal()">&times;</span>
-        <h2>Update details</h2>
-        <p class="tagme">Make sure your details are correctly field!</p>
-        <form id="editSkillsForm">
-          <!-- Skills will be dynamically inserted here -->
-          <button type="button" onclick="saveSkillsChanges()">
-            Save Changes
-          </button>
-        </form>
-      </div>
-    </div>
 
     <!-- ... other sections ... -->
 
