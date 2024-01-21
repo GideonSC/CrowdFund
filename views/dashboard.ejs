@@ -107,40 +107,58 @@
 
       <div class="dashboard">
         <div class="profile-info">
-          <p id="error" style="color: red"></p>
+          <p id="error" style="color: red"><%=message %></p>
           <span>Profile Email </span>
           <div id="profile_email"><%=user.email%></div>
           <span>Current Level</span>
           <div><%=user.level.level%></div>
           <div class="balance-buttons">
-            <% if (withdraw == true){ %>
-
             <button
-              onclick="fetch(`/withdraw`, {
-                method: 'PUT',}).then(() => {
-                window.location.href = '/dashboard';
-              });"
-              id="showForm"
-            >
-              Withdraw
-            </button>
-
-            <% } %> <% if (withdraw == false){ %>
-            <button
-              onclick="fetch(`/withdraw`, {
-                method: 'PUT',}).then((d) => {
+              onclick="
+              var amount = prompt('How much would you like to withdraw')
+              
+              fetch(`/withdraw`, {
+                method: 'PUT', headers:{
+                  'Content-Type':'application/json',
+                },
+              body: JSON.stringify({
+                amount
+              })
+              })
+              .then((d) => {
                   if(d.status == 200){
-                    window.location.href = '/dashboard';
+                    document.getElementById('error').innerHTML = ``
+                    alert('Amount withdrawn')
+                    window.location.href = '/id';
                   }
                   else if(d.status == 500) {
                     document.getElementById('error').innerHTML = `There seems to be an error`
-
                   }
-                  else {
+                  else if(d.status == 405) {
+                    document.getElementById('error').innerHTML = `Insufficient Balance`
+                  }
+                  else if(d.status == 404) {
                     document.getElementById('error').innerHTML = `Bank details invalid,  please update details before withdrawing`
-
+                  }else if(d.status == 406) {
+                    document.getElementById('error').innerHTML = `Amount must be rounded figure eg: 1000, 2000`
                   }
-              });"
+                  else if(d.status == 407) {
+                    document.getElementById('error').innerHTML = `Your wallet but be 2000 or above to withdraw`
+                  }
+                  else if(d.status == 408) {
+                    document.getElementById('error').innerHTML = `You can only withdraw from 2000 above`
+                  }
+                  else if(d.status == 409) {
+                    document.getElementById('error').innerHTML = `You need to have at least two referral in level 1`
+                  }
+                  else if(d.status == 203) {
+                    // document.getElementById('error').innerHTML = `Your wallet but be 2000 or above to withdraw`
+                  }
+                  else throw 0
+              }).catch(err =>{
+                document.getElementById('error').innerHTML = `There seems to be an error try again`
+              })
+              "
             >
               Withdraw
             </button>
@@ -148,20 +166,21 @@
               Withdraw
             </button> -->
 
-            <% } %>
-            <button onclick="">
-              <i class="fas fa-sync-alt"></i>Next Level
-            </button>
+            <form action="/level-up" method="post">
+              <button style="background-color: rgb(197, 197, 46)">
+                <i class="fas fa-sync-alt"></i>Next Level
+              </button>
+            </form>
           </div>
         </div>
         <div class="referrals">
           <h3>Referrals</h3>
           <ul id="referralList">
             <!-- Example referral profiles -->
-            <% if(user.referee.length == 0){ %>
+            <% if(referals.length == 0){ %>
             <span> You have no referral </span>
-            <% } %> <% user.referee.forEach( x => {%>
-            <li>Referral 1: <%= x%></li>
+            <% } %> <% referals.forEach( x => {%>
+            <li>Referral 1: <%= x.username%> Level: <%= x.level.level%></li>
 
             <% }) %>
           </ul>
@@ -196,7 +215,7 @@
     </section>
     <!-- footer section -->
 
-    <!-- jQery -->
+    <!-- jQuery -->
     <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
     <!-- popper js -->
     <script

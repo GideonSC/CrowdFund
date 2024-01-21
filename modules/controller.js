@@ -14,14 +14,14 @@ module.exports.levelAuth = (req, res, done) => {
   User.findById(req.user)
     .then(async (data) => {
       if (data) {
+        const createdAT = new Date(data.level.date).getDate();
+        const currentDate = new Date().getDate();
+        const currentTime = new Date().getHours();
+        const createdATtime = new Date(data.level.date).getHours();
         switch (data.level.level) {
           case 1:
-            const createdAT = new Date(data.level.date).getDate();
-            const currentDate = new Date().getDate();
-            const currentTime = new Date().getHours();
-            const createdATtime = new Date(data.level.date).getHours();
             if (
-              Number(currentDate) - Number(createdAT) >= 1 &&
+              Number(currentDate) - Number(createdAT) >= data.level.level &&
               Number(currentTime) - Number(createdATtime) >= 0 &&
               data.level.updated === false
             ) {
@@ -29,7 +29,7 @@ module.exports.levelAuth = (req, res, done) => {
               await User.findByIdAndUpdate(req.user, {
                 wallet: data.wallet + 1000,
                 level: {
-                  level: 1,
+                  level: data.level.level,
                   date: data.level.date,
                   updated: true,
                 },
@@ -38,19 +38,177 @@ module.exports.levelAuth = (req, res, done) => {
               req.withdraw = true;
             } else {
               // Havent reached
+              if (data.level.updated == true) {
+                req.withdraw = true;
+              } else req.withdraw = false;
+              done();
+            }
+            break;
+
+          case 2:
+            // Level 2
+            if (
+              Number(currentDate) - Number(createdAT) >= data.level.level &&
+              Number(currentTime) - Number(createdATtime) >= 0 &&
+              data.level.updated === false
+            ) {
+              // 24 hrs
               await User.findByIdAndUpdate(req.user, {
+                wallet: data.wallet + 2000,
                 level: {
-                  level: 1,
+                  level: data.level.level,
                   date: data.level.date,
-                  updated: false,
+                  updated: true,
                 },
               });
               done();
-              req.withdraw = false;
+              req.withdraw = true;
+            } else {
+              // Havent reached
+              if (data.level.updated == true) {
+                req.withdraw = true;
+              } else req.withdraw = false;
+              done();
+            }
+            break;
+
+          case 3:
+            // Level 2
+            if (
+              Number(currentDate) - Number(createdAT) >= data.level.level &&
+              Number(currentTime) - Number(createdATtime) >= 0 &&
+              data.level.updated === false
+            ) {
+              // 24 hrs
+              await User.findByIdAndUpdate(req.user, {
+                wallet: data.wallet + 4000,
+                level: {
+                  level: data.level.level,
+                  date: data.level.date,
+                  updated: true,
+                },
+              });
+              done();
+              req.withdraw = true;
+            } else {
+              // Havent reached
+              if (data.level.updated == true) {
+                req.withdraw = true;
+              } else req.withdraw = false;
+              done();
+            }
+            break;
+
+          case 4:
+            // Level 2
+            if (
+              Number(currentDate) - Number(createdAT) >= data.level.level &&
+              Number(currentTime) - Number(createdATtime) >= 0 &&
+              data.level.updated === false
+            ) {
+              // 24 hrs
+              await User.findByIdAndUpdate(req.user, {
+                wallet: data.wallet + 8000,
+                level: {
+                  level: data.level.level,
+                  date: data.level.date,
+                  updated: true,
+                },
+              });
+              done();
+              req.withdraw = true;
+            } else {
+              // Havent reached
+              if (data.level.updated == true) {
+                req.withdraw = true;
+              } else req.withdraw = false;
+              done();
+            }
+            break;
+
+          case 5:
+            // Level 2
+            if (
+              Number(currentDate) - Number(createdAT) >= data.level.level &&
+              Number(currentTime) - Number(createdATtime) >= 0 &&
+              data.level.updated === false
+            ) {
+              // 24 hrs
+              await User.findByIdAndUpdate(req.user, {
+                wallet: data.wallet + 16000,
+                level: {
+                  level: data.level.level,
+                  date: data.level.date,
+                  updated: true,
+                },
+              });
+              done();
+              req.withdraw = true;
+            } else {
+              // Havent reached
+              if (data.level.updated == true) {
+                req.withdraw = true;
+              } else req.withdraw = false;
+              done();
+            }
+            break;
+
+          case 6:
+            // Level 2
+            if (
+              Number(currentDate) - Number(createdAT) >= data.level.level &&
+              Number(currentTime) - Number(createdATtime) >= 0 &&
+              data.level.updated === false
+            ) {
+              // 24 hrs
+              await User.findByIdAndUpdate(req.user, {
+                wallet: data.wallet + 32000,
+                level: {
+                  level: data.level.level,
+                  date: data.level.date,
+                  updated: true,
+                },
+              });
+              done();
+              req.withdraw = true;
+            } else {
+              // Havent reached
+              if (data.level.updated == true) {
+                req.withdraw = true;
+              } else req.withdraw = false;
+              done();
+            }
+            break;
+
+          case 7:
+            // Level 2
+            if (
+              Number(currentDate) - Number(createdAT) >= data.level.level &&
+              Number(currentTime) - Number(createdATtime) >= 0 &&
+              data.level.updated === false
+            ) {
+              // 24 hrs
+              await User.findByIdAndUpdate(req.user, {
+                wallet: data.wallet + 64000,
+                level: {
+                  level: data.level.level,
+                  date: data.level.date,
+                  updated: true,
+                },
+              });
+              done();
+              req.withdraw = true;
+            } else {
+              // Havent reached
+              if (data.level.updated == true) {
+                req.withdraw = true;
+              } else req.withdraw = false;
+              done();
             }
             break;
 
           default:
+            done();
             break;
         }
       } else throw 0;

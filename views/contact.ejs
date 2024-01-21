@@ -92,18 +92,20 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form_container">
-            <form action="">
+            <p style="color: red;"><%=message%></p>
+            <p style="color: green;"><%=success%></p>
+            <form action="/support" method="post">
               <div>
-                <input type="text" placeholder="Your Name" />
+                <input required type="text" name="name" placeholder="Your Name" />
               </div>
               <div>
-                <input type="text" placeholder="Phone Number" />
+                <input required type="text" name="phone" placeholder="Phone Number" />
               </div>
               <div>
-                <input type="email" placeholder="Email" />
+                <input required type="email" name="email" placeholder="Email" />
               </div>
               <div>
-                <input type="text" class="message-box" placeholder="Message" />
+                <input required type="text" name="message" class="message-box" placeholder="Message" />
               </div>
               <div class="btn_box">
                 <button>
@@ -145,7 +147,7 @@
               Newsletter
             </h5>
             <form action="">
-              <input type="email" placeholder="Enter your email">
+              <input required type="email" placeholder="Enter your email">
               <button>
                 Subscribe
               </button>
