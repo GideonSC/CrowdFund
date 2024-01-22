@@ -54,7 +54,7 @@ app.post("/signup", (req, res) => {
             }
           );
           // Send to user via nodemailer
-
+          console.log(token);
           sendEmail({
             title: "Crowd Fund Email Verification",
             email: email,
@@ -230,6 +230,9 @@ app.get("/verify/:token", (req, res) => {
               });
               const price = 4000;
               const tx_ref = random(10);
+              const buff = Buffer.from(tx_ref).toString("base64");
+              console.log(tx_ref);
+              console.log(buff);
               const body = JSON.stringify({
                 tx_ref,
                 amount: price,
@@ -240,9 +243,7 @@ app.get("/verify/:token", (req, res) => {
                   name: fullname,
                 },
                 // redirect_url: `http://localhost:5000/pay-ver/${Buffer.from(
-                redirect_url: `https://crowdfunds.com.ng/pay-ver/${Buffer.from(
-                  tx_ref
-                ).toString("base64")}`, // Change this to actual route
+                redirect_url: `https://crowdfunds.com.ng/pay-ver/${buff}`, // Change this to actual route
               });
 
               User.save()
@@ -301,6 +302,7 @@ app.get("/pay-ver/:ref", async (req, res) => {
     const $ = req.params.ref;
     const ref = Buffer.from($, "base64").toString("utf-8");
     const { status } = req.query;
+
     if (status == "cancelled") {
       // for tests
       await Schema.TXN.findOneAndUpdate(
@@ -509,7 +511,7 @@ app.put("/withdraw", Block, async (req, res) => {
           if (user.bankName && user.accountNum && user.accountName) {
             // Bank details exist
             if (user.wallet >= 2000) {
-              if (Number(amount) >= 200) {
+              if (Number(amount) >= 2000) {
                 if (user.wallet >= Number(amount)) {
                   if (Number(amount) % 1000 > 0) {
                     res.status(406).end(); // Tell user to use rounded figues
@@ -584,7 +586,7 @@ app.put("/withdraw", Block, async (req, res) => {
           if (user.bankName && user.accountNum && user.accountName) {
             // Bank details exist
             if (user.wallet >= 2000) {
-              if (Number(amount) >= 200) {
+              if (Number(amount) >= 2000) {
                 if (user.wallet >= Number(amount)) {
                   if (Number(amount) % 1000 > 0) {
                     res.status(406).end(); // Tell user to use rounded figues
@@ -659,7 +661,7 @@ app.put("/withdraw", Block, async (req, res) => {
           if (user.bankName && user.accountNum && user.accountName) {
             // Bank details exist
             if (user.wallet >= 2000) {
-              if (Number(amount) >= 200) {
+              if (Number(amount) >= 2000) {
                 if (user.wallet >= Number(amount)) {
                   if (Number(amount) % 1000 > 0) {
                     res.status(406).end(); // Tell user to use rounded figues
@@ -736,7 +738,7 @@ app.put("/withdraw", Block, async (req, res) => {
     if (user.bankName && user.accountNum && user.accountName) {
       // Bank details exist
       if (user.wallet >= 2000) {
-        if (Number(amount) >= 200) {
+        if (Number(amount) >= 2000) {
           if (user.wallet >= Number(amount)) {
             if (Number(amount) % 1000 > 0) {
               res.status(406).end(); // Tell user to use rounded figues

@@ -7,9 +7,6 @@ module.exports = async ({ price, tx_ref, txn_p, path, owner }) => {
     x = `https://crowdfunds.com.ng/${path}/${Buffer.from(tx_ref).toString(
       "base64"
     )}`;
-    // x = `http://localhost:5000/${path}/${Buffer.from(tx_ref).toString(
-    //   "base64"
-    // )}`;
   } else {
     x = `https://crowdfunds.com.ng/pay-ver/${Buffer.from(tx_ref).toString(
       "base64"

@@ -179,8 +179,10 @@
             <!-- Example referral profiles -->
             <% if(referals.length == 0){ %>
             <span> You have no referral </span>
-            <% } %> <% referals.forEach( x => {%>
-            <li>Referral 1: <%= x.username%> Level: <%= x.level.level%></li>
+            <% } %> <% referals.forEach( (x, index) => {%>
+            <li>
+              Referral <%=index+1%>: <%= x.username%> Level: <%= x.level.level%>
+            </li>
 
             <% }) %>
           </ul>
