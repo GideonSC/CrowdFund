@@ -226,7 +226,7 @@ module.exports.payAuth = async (req, res) => {
   if (user.level.level <= 0) {
     // User has not signed up
     Pay({
-      price: 4000,
+      price: 4 * 100000,
       tx_ref: random(10),
       txn_p: 1000,
       owner: user,

@@ -14,14 +14,12 @@ module.exports = async ({ price, tx_ref, txn_p, path, owner }) => {
   }
 
   const body = JSON.stringify({
-    tx_ref,
+    reference: tx_ref,
     amount: price,
     currency: "NGN",
-    customer: {
-      email: owner.email,
-    },
-    payment_options: "card, ussd, banktransfer",
-    redirect_url: x, // Change this to actual route
+    email: owner.email,
+    channels: ["card", "mobile_money", "bank_transfer"],
+    callback_url: x, // Change this to actual route
   });
   const TXN = new Schema.TXN({
     amount: txn_p, // Amount to credit user
@@ -31,18 +29,18 @@ module.exports = async ({ price, tx_ref, txn_p, path, owner }) => {
   });
   await TXN.save();
   return new Promise((resolve, reject) => {
-    Axios("https://api.flutterwave.com/v3/payments", {
+    Axios("https://api.paystack.co/transaction/initialize", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        Authorization: `Bearer ${process.env.SECRET_FLW}`,
+        Authorization: `Bearer ${process.env.PAYSTACK_PUB}`,
       },
       body: body,
     })
       .then(($) => {
         const resp = JSON.parse($);
-        resolve(resp.data.link); // Redirect to flutterwave payment modal
+        resolve(resp.data.authorization_url); // Redirect to flutterwave payment modal
       })
       .catch((err) => {
         reject(err);

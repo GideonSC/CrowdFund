@@ -228,7 +228,7 @@ app.get("/verify/:token", (req, res) => {
                 },
                 wallet: 0,
               });
-              const price = 4000;
+              const price = 4 * 100000;
               const tx_ref = random(10);
               const buff = Buffer.from(tx_ref).toString("base64");
               console.log(tx_ref);
@@ -301,21 +301,21 @@ app.get("/pay-ver/:ref", async (req, res) => {
   try {
     const $ = req.params.ref;
     const ref = Buffer.from($, "base64").toString("utf-8");
-    const { status } = req.query;
+    const { trxref } = req.query;
 
-    if (status == "cancelled") {
+    if (trxref != ref) {
       // for tests
       await Schema.TXN.findOneAndUpdate(
         {
           ref,
         },
         {
-          status,
+          status: "failed",
         }
       );
       req.flash("message", "Failed Transaction");
       res.redirect("/id");
-    } else if (status == "completed") {
+    } else if (trxref == ref) {
       Schema.TXN.findOne({
         ref,
       })
@@ -378,8 +378,6 @@ app.get("/pay-ver/:ref", async (req, res) => {
               })
               .catch((err) => {
                 console.log(err);
-                console.log("y");
-
                 req.flash("message", "Invalid Transaction detected.");
                 res.status(404).redirect("/id");
               });
@@ -394,8 +392,6 @@ app.get("/pay-ver/:ref", async (req, res) => {
       throw "invalid txn status";
     }
   } catch (error) {
-    console.log("z");
-
     console.log(error);
     req.flash("message", "Error Validating Transaction.");
     res.redirect("/id");
@@ -808,7 +804,7 @@ app.post("/level-up", Block, async (req, res) => {
         path: "pay-upgrade",
         owner: user,
         tx_ref: randomGen(10),
-        price: 2000,
+        price: 2 * 100000,
         txn_p: 2000,
       })
         .then((d) => {
@@ -826,7 +822,7 @@ app.post("/level-up", Block, async (req, res) => {
         path: "pay-upgrade",
         owner: user,
         tx_ref: randomGen(10),
-        price: 4000,
+        price: 4 * 100000,
         txn_p: 4000,
       })
         .then((d) => {
@@ -844,7 +840,7 @@ app.post("/level-up", Block, async (req, res) => {
         path: "pay-upgrade",
         owner: user,
         tx_ref: randomGen(10),
-        price: 8000,
+        price: 8 * 100000,
         txn_p: 8000,
       })
         .then((d) => {
@@ -861,7 +857,7 @@ app.post("/level-up", Block, async (req, res) => {
         path: "pay-upgrade",
         owner: user,
         tx_ref: randomGen(10),
-        price: 16000,
+        price: 16 * 100000,
         txn_p: 16000,
       })
         .then((d) => {
@@ -878,7 +874,7 @@ app.post("/level-up", Block, async (req, res) => {
         path: "pay-upgrade",
         owner: user,
         tx_ref: randomGen(10),
-        price: 32000,
+        price: 32 * 100000,
         txn_p: 32000,
       })
         .then((d) => {
@@ -895,7 +891,7 @@ app.post("/level-up", Block, async (req, res) => {
         path: "pay-upgrade",
         owner: user,
         tx_ref: randomGen(10),
-        price: 64000,
+        price: 64 * 100000,
         txn_p: 64000,
       })
         .then((d) => {
@@ -918,20 +914,20 @@ app.get("/pay-upgrade/:ref", async (req, res) => {
   try {
     const $ = req.params.ref;
     const ref = Buffer.from($, "base64").toString("utf-8");
-    const { status } = req.query;
-    if (status == "cancelled") {
+    const { trxref } = req.query;
+    if (trxref != ref) {
       // for tests
       await Schema.TXN.findOneAndUpdate(
         {
           ref,
         },
         {
-          status,
+          status: "failed",
         }
       );
       req.flash("message", "Failed Transaction");
       res.redirect("/id");
-    } else if (status == "completed") {
+    } else if (trxref == ref) {
       Schema.TXN.findOne({
         ref,
       })
@@ -989,8 +985,6 @@ app.get("/pay-upgrade/:ref", async (req, res) => {
       throw "invalid txn status";
     }
   } catch (error) {
-    console.log("z");
-
     console.log(error);
     req.flash("message", "Error Validating Transaction.");
     res.redirect("/id");
