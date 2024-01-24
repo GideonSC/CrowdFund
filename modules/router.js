@@ -526,10 +526,12 @@ app.put("/withdraw", Block, async (req, res) => {
     people = await Schema.User.find({ referer: user._id });
   switch (user.level.level) {
     case 2:
-      if (referees.length >= 2) {
+      if (people.length >= 2) {
         people.forEach((data) => {
           if (data.level.level >= 1) num = num + 1;
         });
+        console.log(num);
+        res.end();
         if (num >= 2) {
           if (user.bankName && user.accountNum && user.accountName) {
             // Bank details exist
@@ -539,6 +541,7 @@ app.put("/withdraw", Block, async (req, res) => {
                   if (Number(amount) % 1000 > 0) {
                     res.status(406).end(); // Tell user to use rounded figues
                   } else {
+                    res.end();
                     // Every criteria is filled
                     sendEmail({
                       title: "Crowd Fund Withdrawal request",
@@ -569,7 +572,6 @@ app.put("/withdraw", Block, async (req, res) => {
                         await Schema.User.findByIdAndUpdate(req.user, {
                           wallet: user.wallet - Number(amount),
                         });
-
                         console.log(`Sent email to ${user.email}`);
                         res.end();
                       })
