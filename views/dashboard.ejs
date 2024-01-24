@@ -153,6 +153,8 @@
                     document.getElementById('error').innerHTML = `You need to have at least two referral in at least level 1`
                   }
                   else if(d.status == 203) {
+                    document.getElementById('error').innerHTML = ``
+
                     // document.getElementById('error').innerHTML = `Your wallet but be 2000 or above to withdraw`
                   }
                   else throw 0
@@ -202,9 +204,8 @@
             Copy Referral Link
           </button>
         </div>
+        <button class="logout" onclick="logout()">Logout</button>
       </div>
-
-      <button class="logout" onclick="logout()">Logout</button>
     </div>
 
     <!-- footer section -->
