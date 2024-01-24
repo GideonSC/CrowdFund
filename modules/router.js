@@ -54,15 +54,14 @@ app.post("/signup", (req, res) => {
             }
           );
           // Send to user via nodemailer
-          console.log(token);
           sendEmail({
-            title: "Crowd Fund Email Verification",
+            title: `${username} Verify your email. `,
             email: email,
             message: `Welcome to CrowdFund
             ${username}, <br/> please verify your email
             by clicking the link below, this process
             is automatic.`,
-            subject: "Email Verification",
+            subject: `Hello ${username} this is your Email Verification`,
             link: `https://www.crowdfunds.com.ng/verify/${token}`,
             // link: `http://localhost:5000/verify/${token}`,
           })
@@ -198,91 +197,118 @@ function SignBlock(req, res, next) {
 app.get("/verify/:token", (req, res) => {
   try {
     const { token } = req.params;
-    if (token) {
+    if (token !== "" || token !== undefined) {
       jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
         try {
           if (err) {
-            throw err;
+            console.log("here");
           } else {
-            // Already decoded
             const { fullname, password, username, number, email, ref } =
               decoded;
-            const $user_check = await Schema.User.findOne({
+            Schema.User.findOne({
               email,
-            });
-            if ($user_check) {
-              req.flash("message", "Token Expired");
-              res.redirect("/id"); //User found verification code expired
-            } else {
-              const User = new Schema.User({
-                fullname,
-                password,
-                username,
-                referer: ref,
-                phoneNumber: number,
-                email,
-                level: {
-                  level: 0,
-                  date: new Date(),
-                  updated: false,
-                },
-                wallet: 0,
-              });
-              const price = 4 * 100000;
-              const tx_ref = random(10);
-              const buff = Buffer.from(tx_ref).toString("base64");
-              console.log(tx_ref);
-              console.log(buff);
-              const body = JSON.stringify({
-                tx_ref,
-                amount: price,
-                currency: "NGN",
-                payment_options: "card, ussd, banktransfer",
-                customer: {
-                  email,
-                  name: fullname,
-                },
-                // redirect_url: `http://localhost:5000/pay-ver/${Buffer.from(
-                redirect_url: `https://crowdfunds.com.ng/pay-ver/${buff}`, // Change this to actual route
-              });
-
-              User.save()
-                .then(async (data) => {
-                  // Move to payment
-                  const TXN = new Schema.TXN({
-                    amount: 1000,
-                    ref: tx_ref,
-                    owner: data._id,
-                    status: "pending",
-                  });
-                  await TXN.save();
-                  Axios("https://api.flutterwave.com/v3/payments", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      Accept: "application/json",
-                      Authorization: `Bearer ${process.env.SECRET_FLW}`,
+            })
+              .then((data) => {
+                if (data)
+                  // User found
+                  throw "User found";
+                else {
+                  // User not found
+                  const User = new Schema.User({
+                    fullname,
+                    password,
+                    username,
+                    referer: ref,
+                    phoneNumber: number,
+                    email,
+                    level: {
+                      level: 0,
+                      date: new Date(),
+                      updated: false,
                     },
-                    body: body,
-                  })
-                    .then(($) => {
-                      const resp = JSON.parse($);
-                      res.redirect(resp.data.link); // Redirect to flutterwave place
+                    wallet: 0,
+                  });
+                  const price = 4 * 100000;
+                  const tx_ref = random(10);
+                  const buff = Buffer.from(tx_ref).toString("base64");
+
+                  const body = JSON.stringify({
+                    reference: tx_ref,
+                    amount: price,
+                    currency: "NGN",
+                    email: email,
+                    channels: ["card", "mobile_money", "bank_transfer"],
+                    callback_url: `https://crowdfunds.com.ng/pay-ver/${buff}`, // Change this to actual route
+                  });
+
+                  User.save()
+                    .then(async (data) => {
+                      // Move to payment
+                      const TXN = new Schema.TXN({
+                        amount: 1000,
+                        ref: tx_ref,
+                        owner: data._id,
+                        status: "pending",
+                      });
+                      await TXN.save();
+                      Axios("https://api.paystack.co/transaction/initialize", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Accept: "application/json",
+                          Authorization: `Bearer ${process.env.PAYSTACK_PUB}`,
+                        },
+                        body: body,
+                      })
+                        .then(($) => {
+                          const resp = JSON.parse($);
+                          res.redirect(resp.data.authorization_url); // Redirect to flutterwave place
+                        })
+                        .catch((err) => {
+                          console.log("here");
+                          console.log(err);
+                          req.flash("message", "Error Signing you up");
+                          res.redirect("/id");
+                        });
                     })
-                    .catch((err) => {
-                      console.log(err);
+                    .catch((e) => {
+                      console.log(e);
                       req.flash("message", "Error Signing you up");
                       res.redirect("/id");
                     });
-                })
-                .catch((e) => {
-                  console.log(e);
-                  req.flash("message", "Error Signing you up");
-                  res.redirect("/id");
-                });
-            }
+                }
+              })
+              .catch((err) => {
+                req.flash("message", "Error validating");
+                res.redirect("/id");
+              });
           }
+          // } else {
+          //   // Already decoded
+
+          //   if ($user_check) {
+          //     req.flash("message", "Token Expired");
+          //     res.redirect("/id"); //User found verification code expired
+          //   } else {
+
+          //     // const body = JSON.stringify({
+          //     //   tx_ref,
+          //     //   amount: price,
+          //     //   currency: "NGN",
+          //     //   payment_options: "card, ussd, banktransfer",
+          //     //   customer: {
+          //     //     email,
+          //     //     name: fullname,
+          //     //   },
+          //     //   // redirect_url: `http://localhost:5000/pay-ver/${Buffer.from(
+          //     //   redirect_url: `https://crowdfunds.com.ng/pay-ver/${buff}`, // Change this to actual route
+          //     // });
+
+          //   }
+          // }
         } catch (error) {
+          console.log(error);
+          console.log("1");
           req.flash("message", "Token mismatch");
           res.redirect("/id");
         }
@@ -291,6 +317,7 @@ app.get("/verify/:token", (req, res) => {
       throw "No token found";
     }
   } catch (err) {
+    console.log("2");
     console.log(err);
     req.flash("message", "Token mismatch");
     res.redirect("/id");
@@ -501,7 +528,7 @@ app.put("/withdraw", Block, async (req, res) => {
     case 2:
       if (referees.length >= 2) {
         people.forEach((data) => {
-          if (data.level.level == 1) num = num + 1;
+          if (data.level.level >= 1) num = num + 1;
         });
         if (num >= 2) {
           if (user.bankName && user.accountNum && user.accountName) {
@@ -576,7 +603,7 @@ app.put("/withdraw", Block, async (req, res) => {
     case 7:
       if (referees.length >= 2) {
         people.forEach((data) => {
-          if (data.level.level == 1) num = num + 1;
+          if (data.level.level >= 1) num = num + 1;
         });
         if (num >= 2) {
           if (user.bankName && user.accountNum && user.accountName) {
@@ -651,7 +678,7 @@ app.put("/withdraw", Block, async (req, res) => {
     case 4:
       if (referees.length >= 2) {
         people.forEach((data) => {
-          if (data.level.level == 2) num = num + 1;
+          if (data.level.level >= 2) num = num + 1;
         });
         if (num >= 2) {
           if (user.bankName && user.accountNum && user.accountName) {
