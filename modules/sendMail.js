@@ -10,7 +10,7 @@ function sendEmail({ message, title, subject, link, email }) {
     <p style="margin-bottom: 1em">
      ${message}<br />
     </p>
-    ${link ? `<a href="${link}"> Click here ${link} </a> <br/>` : ""}
+    ${link ? `<a href="${link}"> Click here </a> <br/>` : ""}
    
     <small>Copyright© CrowdFund ${new Date().getFullYear()} </small>
    </div>
