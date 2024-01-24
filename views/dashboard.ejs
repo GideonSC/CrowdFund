@@ -116,7 +116,7 @@
             <button
               onclick="
               var amount = prompt('How much would you like to withdraw')
-              
+              document.getElementById('error').innerHTML = ``
               fetch(`/withdraw`, {
                 method: 'PUT', headers:{
                   'Content-Type':'application/json',
