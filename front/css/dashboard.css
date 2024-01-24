@@ -165,7 +165,7 @@ textarea {
   margin: 5px 0;
 }
 button.logout {
-  /* margin-top: 3em; */
+  margin-top: 5px;
   background-color: #dc3545;
   border-radius: 5px;
   width: 100%;
