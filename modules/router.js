@@ -544,26 +544,26 @@ app.put("/withdraw", Block, async (req, res) => {
                       title: "Crowd Fund Withdrawal request",
                       email: "gideoncode18@gmail.com",
                       message: `A withdrawal was request from a user with these details
-          <br/>
-          Name: ${user.fullname} <br/>
-          Email: ${user.email} <br/>
-          Name on Account: ${user.accountName} <br/>
-          BankName: ${user.bankName} <br/>
-          Account Number: ${user.accountNum} <br/>
-          Current Level: ${user.level.level} <br/>
-          Amount: ${amount} <br/>
-          Wallet Balance: ${user.wallet} <br/>
-          Time registered Level: ${new Date(
-            user.level.date
-          ).toDateString()} <br/>
-          `,
+                    <br/>
+                    Name: ${user.fullname} <br/>
+                    Email: ${user.email} <br/>
+                    Name on Account: ${user.accountName} <br/>
+                    BankName: ${user.bankName} <br/>
+                    Account Number: ${user.accountNum} <br/>
+                    Current Level: ${user.level.level} <br/>
+                    Amount: ${amount} <br/>
+                    Wallet Balance: ${user.wallet} <br/>
+                    Time registered Level: ${new Date(
+                      user.level.date
+                    ).toDateString()} <br/>
+                    `,
                       subject: "Withdrawal Request",
                     })
                       .then(async () => {
                         await sendEmail({
                           title: "Crowd Fund Withdrawal request",
                           email: user.email,
-                          message: `Hello ${user.fullname}, You withdrawal request has been sent for confirmation, the admin will attend to you shortly`,
+                          message: `Hello ${user.fullname}, Your withdrawal request has been sent for confirmation, the admin will attend to you shortly`,
                           subject: "Withdrawal Request",
                         });
                         await Schema.User.findByIdAndUpdate(req.user, {
