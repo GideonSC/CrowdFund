@@ -19,6 +19,7 @@
 
     <!-- bootstrap core css -->
     <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
 
     <!-- fonts style -->
     <link
@@ -36,6 +37,19 @@
   </head>
 
   <body class="sub_page">
+    <div id="loader">
+      <form action="/withdraw" method="post">
+        <div id="loader-item">
+          <input
+            type="number"
+            placeholder="Amount to withdraw"
+            required
+            name="amount"
+          />
+          <button>Withdraw</button>
+        </div>
+      </form>
+    </div>
     <div class="hero_area">
       <!-- header section strats -->
       <header class="header_section">
@@ -92,7 +106,7 @@
           >Welcome, <span id="user_name"><%=user.fullname %></span>.</span
         >
       </div>
-      <!-- Count Down for withdrawal -->
+      <!-- Count Down for ` -->
       <div class="countdown" id="countdown">
         <br />
         <!-- <p id="expiryDate" data-time="<%=user.level.date%>">
@@ -112,63 +126,14 @@
           <div id="profile_email"><%=user.email%></div>
           <span>Current Level</span>
           <div><%=user.level.level%></div>
-          <div class="balance-buttons">
-            <button
-              onclick="
-              var amount = prompt('How much would you like to withdraw')
-              document.getElementById('error').innerHTML = ``
-              fetch(`/withdraw`, {
-                method: 'PUT', headers:{
-                  'Content-Type':'application/json',
-                },
-              body: JSON.stringify({
-                amount
-              })
-              })
-              .then((d) => {
-                  if(d.status == 200){
-                    document.getElementById('error').innerHTML = ``
-                    alert('Amount withdrawn')
-                    window.location.href = '/id';
-                  }
-                  else if(d.status == 500) {
-                    document.getElementById('error').innerHTML = `There seems to be an error`
-                  }
-                  else if(d.status == 405) {
-                    document.getElementById('error').innerHTML = `Insufficient Balance`
-                  }
-                  else if(d.status == 404) {
-                    document.getElementById('error').innerHTML = `Bank details invalid,  please update details before withdrawing`
-                  }
-                  else if(d.status == 406) {
-                    document.getElementById('error').innerHTML = `Amount must be rounded figure eg: 1000, 2000`
-                  }
-                  else if(d.status == 407) {
-                    document.getElementById('error').innerHTML = `Your wallet but be 2000 or above to withdraw`
-                  }
-                  else if(d.status == 408) {
-                    document.getElementById('error').innerHTML = `You can only withdraw from 2000 above`
-                  }
-                  else if(d.status == 409) {
-                    document.getElementById('error').innerHTML = `You need to have at least two referral in at least level 1`
-                  }
-                  else if(d.status == 203) {
-                    // document.getElementById('error').innerHTML = `Your wallet but be 2000 or above to withdraw`
-                  }
-                  else throw 0
-              }).catch(err =>{
-                document.getElementById('error').innerHTML = `There seems to be an error try again`
-              })
-              "
-            >
-              Withdraw
-            </button>
-            <!-- <button onclick="alert('You cannot withdraw yet.')" id="showForm">
-              Withdraw
-            </button> -->
 
+          <div class="balance-buttons">
+            <button class="px-3 py-2" id="withdraw">Withdraw</button>
             <form action="/level-up" method="post">
-              <button style="background-color: rgb(197, 197, 46)">
+              <button
+                class="px-3 py-2"
+                style="background-color: rgb(197, 197, 46)"
+              >
                 <i class="fas fa-sync-alt"></i>Next Level
               </button>
             </form>
@@ -201,7 +166,9 @@
           <button class="button1" onclick="copyReferralLink()">
             Copy Referral Link
           </button>
-          <button class="logout" onclick="logout()">Logout</button>
+          <button class="logout px-3 py-2 text-white" onclick="logout()">
+            Logout
+          </button>
         </div>
       </div>
     </div>

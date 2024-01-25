@@ -514,14 +514,14 @@ app.post("/data-change", Block, (req, res) => {
   }
 });
 
-app.put("/withdraw", Block, async (req, res) => {
+app.post("/withdraw", Block, async (req, res) => {
   // Withdrawal algorithm
 
   const user = await Schema.User.findById(req.user);
   const { amount } = req.body;
   const referees = user.referee;
   var num = 0;
-  var people;
+  var people = [];
   if (referees.length > 0)
     people = await Schema.User.find({ referer: user._id });
   switch (user.level.level) {
@@ -541,7 +541,6 @@ app.put("/withdraw", Block, async (req, res) => {
                   if (Number(amount) % 1000 > 0) {
                     res.status(406).end(); // Tell user to use rounded figues
                   } else {
-                    res.end();
                     // Every criteria is filled
                     sendEmail({
                       title: "Crowd Fund Withdrawal request",
@@ -573,32 +572,52 @@ app.put("/withdraw", Block, async (req, res) => {
                           wallet: user.wallet - Number(amount),
                         });
                         console.log(`Sent email to ${user.email}`);
-                        res.end();
+                        res.redirect("/dashboard");
                       })
                       .catch((err) => {
                         console.log(err);
-                        res.status(500).end();
+                        req.flash("message", "There seems to be an error");
+                        res.redirect("/dashboard");
                       });
                   }
                 } else {
-                  res.status(405).end(); // insufficent balance
+                  req.flash("message", "Insufficient Balance");
+                  res.redirect("/dashboard");
+
+                  // insufficent balance
                 }
               } else {
-                res.status(408).end(); // low amount
+                res.flash("message", "Your balance is not up to that amount");
+                res.redirect("/dashboard");
+                // low amount
               }
             } else {
-              if (amount) res.status(407).end(); // Account not up to 2k
-              else res.status(203).end(); // closed modal
+              if (amount) {
+                req.flash("message", "Your account must be 2000 or more");
+                res.redirect("/dashboard");
+                // Account not up to 2k
+              } else res.status(203).end(); // closed modal
             }
           } else {
             if (!amount) res.status(203).end();
-            else res.status(404).end();
+            else {
+              req.flash("message", "Bank details invalid");
+              res.redirect("/dashboard");
+            }
           }
         } else {
-          res.status(409).end();
+          req.flash(
+            "message",
+            "You need to have atleast two referrals in level 1 or higher"
+          );
+          res.redirect("/dashboard");
         }
       } else {
-        res.status(409).end();
+        req.flash(
+          "message",
+          "You need to have atleast two referrals in level 1 or higher"
+        );
+        res.redirect("/dashboard");
       }
       break;
 
@@ -648,32 +667,52 @@ app.put("/withdraw", Block, async (req, res) => {
                         });
 
                         console.log(`Sent email to ${user.email}`);
-                        res.end();
+                        res.redirect("/dashboard");
                       })
                       .catch((err) => {
                         console.log(err);
-                        res.status(500).end();
+                        req.flash("message", "There seems to be an error");
+                        res.redirect("/dashboard");
                       });
                   }
                 } else {
-                  res.status(405).end(); // insufficent balance
+                  req.flash("message", "Insufficient Balance");
+                  res.redirect("/dashboard");
+
+                  // insufficent balance
                 }
               } else {
-                res.status(408).end(); // low amount
+                res.flash("message", "Your balance is not up to that amount");
+                res.redirect("/dashboard");
+                // low amount
               }
             } else {
-              if (amount) res.status(407).end(); // Account not up to 2k
-              else res.status(203).end(); // closed modal
+              if (amount) {
+                req.flash("message", "Your account must be 2000 or more");
+                res.redirect("/dashboard");
+                // Account not up to 2k
+              } else res.status(203).end(); // closed modal
             }
           } else {
             if (!amount) res.status(203).end();
-            else res.status(404).end();
+            else {
+              req.flash("message", "Bank details invalid");
+              res.redirect("/dashboard");
+            }
           }
         } else {
-          res.status(409).end();
+          req.flash(
+            "message",
+            "You need to have atleast two referrals in level 1 or higher"
+          );
+          res.redirect("/dashboard");
         }
       } else {
-        res.status(409).end();
+        req.flash(
+          "message",
+          "You need to have atleast two referrals in level 1 or higher"
+        );
+        res.redirect("/dashboard");
       }
       break;
 
@@ -721,34 +760,53 @@ app.put("/withdraw", Block, async (req, res) => {
                         await Schema.User.findByIdAndUpdate(req.user, {
                           wallet: user.wallet - Number(amount),
                         });
-
                         console.log(`Sent email to ${user.email}`);
-                        res.end();
+                        res.redirect("/dashboard");
                       })
                       .catch((err) => {
                         console.log(err);
-                        res.status(500).end();
+                        req.flash("message", "There seems to be an error");
+                        res.redirect("/dashboard");
                       });
                   }
                 } else {
-                  res.status(405).end(); // insufficent balance
+                  req.flash("message", "Insufficient Balance");
+                  res.redirect("/dashboard");
+
+                  // insufficent balance
                 }
               } else {
-                res.status(408).end(); // low amount
+                res.flash("message", "Your balance is not up to that amount");
+                res.redirect("/dashboard");
+                // low amount
               }
             } else {
-              if (amount) res.status(407).end(); // Account not up to 2k
-              else res.status(203).end(); // closed modal
+              if (amount) {
+                req.flash("message", "Your account must be 2000 or more");
+                res.redirect("/dashboard");
+                // Account not up to 2k
+              } else res.status(203).end(); // closed modal
             }
           } else {
             if (!amount) res.status(203).end();
-            else res.status(404).end();
+            else {
+              req.flash("message", "Bank details invalid");
+              res.redirect("/dashboard");
+            }
           }
         } else {
-          res.status(409).end();
+          req.flash(
+            "message",
+            "You need to have atleast two referrals in level 1 or higher"
+          );
+          res.redirect("/dashboard");
         }
       } else {
-        res.status(409).end();
+        req.flash(
+          "message",
+          "You need to have atleast two referrals in level 1 or higher"
+        );
+        res.redirect("/dashboard");
       }
       break;
 
@@ -804,22 +862,34 @@ app.put("/withdraw", Block, async (req, res) => {
                 })
                 .catch((err) => {
                   console.log(err);
-                  res.status(500).end();
+                  req.flash("message", "There seems to be an error");
+                  res.redirect("/dashboard");
                 });
             }
           } else {
-            res.status(405).end(); // insufficent balance
+            req.flash("message", "Insufficient Balance");
+            res.redirect("/dashboard");
+
+            // insufficent balance
           }
         } else {
-          res.status(408).end(); // low amount
+          res.flash("message", "Your balance is not up to that amount");
+          res.redirect("/dashboard");
+          // low amount
         }
       } else {
-        if (amount) res.status(407).end(); // Account not up to 2k
-        else res.status(203).end(); // closed modal
+        if (amount) {
+          req.flash("message", "Your account must be 2000 or more");
+          res.redirect("/dashboard");
+          // Account not up to 2k
+        } else res.status(203).end(); // closed modal
       }
     } else {
       if (!amount) res.status(203).end();
-      else res.status(404).end();
+      else {
+        req.flash("message", "Bank details invalid");
+        res.redirect("/dashboard");
+      }
     }
   }
 });

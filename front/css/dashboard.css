@@ -135,6 +135,41 @@ textarea {
   position: absolute;
   margin-left: 25%;
 }
+#loader {
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(2px);
+  background-color: rgba(255, 255, 255, 0.397);
+  display: none;
+  z-index: 300;
+  position: fixed;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+#loader-item > button {
+  background-color: blue;
+  font-size: 14px;
+  border-radius: 2px;
+}
+#loader-item > input {
+  padding: 3px;
+  font-size: 14px;
+  outline: none;
+  margin-bottom: 1em;
+  border: 1.3px solid black;
+}
+#loader-item {
+  background-color: white;
+  padding: 1.2em 2em;
+  display: flex;
+  flex-direction: column;
+  border-radius: 3px;
+}
 
 /* withdrawal modal styles */
 .modal {
@@ -172,5 +207,4 @@ button.logout {
 }
 .footer_section {
   margin-top: 3cm;
-  position: absolute;
 }
