@@ -440,6 +440,7 @@ app.get("/dashboard", Block, Controller.levelAuth, async (req, res) => {
     user,
     withdraw: req.withdraw,
     message: req.flash("message"),
+    success: req.flash("success"),
     referals: ref,
   });
 });
@@ -532,8 +533,6 @@ app.post("/withdraw", Block, async (req, res) => {
         people.forEach((data) => {
           if (data.level.level >= 1) num = num + 1;
         });
-        console.log(num);
-        res.end();
         if (num >= 2) {
           if (user.bankName && user.accountNum && user.accountName) {
             // Bank details exist
@@ -573,6 +572,11 @@ app.post("/withdraw", Block, async (req, res) => {
                         await Schema.User.findByIdAndUpdate(req.user, {
                           wallet: user.wallet - Number(amount),
                         });
+                        res.flash(
+                          "success",
+                          `${Number(amount)} has been withdrawn.`
+                        );
+
                         console.log(`Sent email to ${user.email}`);
                         res.redirect("/dashboard");
                       })
@@ -669,6 +673,11 @@ app.post("/withdraw", Block, async (req, res) => {
                         });
 
                         console.log(`Sent email to ${user.email}`);
+                        res.flash(
+                          "success",
+                          `${Number(amount)} has been withdrawn.`
+                        );
+
                         res.redirect("/dashboard");
                       })
                       .catch((err) => {
@@ -762,6 +771,11 @@ app.post("/withdraw", Block, async (req, res) => {
                         await Schema.User.findByIdAndUpdate(req.user, {
                           wallet: user.wallet - Number(amount),
                         });
+                        res.flash(
+                          "success",
+                          `${Number(amount)} has been withdrawn.`
+                        );
+
                         console.log(`Sent email to ${user.email}`);
                         res.redirect("/dashboard");
                       })
@@ -860,7 +874,8 @@ app.post("/withdraw", Block, async (req, res) => {
                   });
 
                   console.log(`Sent email to ${user.email}`);
-                  res.end();
+                  res.flash("success", `${Number(amount)} has been withdrawn.`);
+                  res.redirect("/dashboard");
                 })
                 .catch((err) => {
                   console.log(err);
