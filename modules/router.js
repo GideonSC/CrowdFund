@@ -20,72 +20,74 @@ var cookieopts = {
 app.set("view engine", "ejs");
 
 app.post("/signup", (req, res) => {
-  const { fullname, username, email, number, password, ref } = req.body;
-  if (
-    !fullname.toString().trim() ||
-    !email.toString().trim() ||
-    !username.toString().trim() ||
-    !number.toString().trim() ||
-    !password.toString().trim()
-  ) {
-    // if any is null
-    req.flash("message", "Fill in all fields to proceed");
-    res.redirect("/id");
-  } else {
-    // Do work
-    Schema.User.findOne({
-      email,
-    })
-      .then(async (data) => {
-        if (!data) {
-          // No user match so can save
-          const token = jwt.sign(
-            {
-              fullname,
-              username,
-              email,
-              number,
-              ref,
-              password: bcrypt.hashSync(password, 10),
-            },
-            process.env.JWT_SECRET,
-            {
-              expiresIn: "30min",
-            }
-          );
-          // Send to user via nodemailer
-          sendEmail({
-            title: `${username} Verify your email. `,
-            email: email,
-            message: `Welcome to CrowdFund
-            ${username}, <br/> please verify your email
-            by clicking the link below, this process
-            is automatic.`,
-            subject: `Hello ${username} this is your Email Verification`,
-            link: `https://www.crowdfunds.com.ng/verify/${token}`,
-            // link: `http://localhost:5000/verify/${token}`,
-          })
-            .then(() => {
-              console.log(`Sent email to ${email}`);
-              res.render("email_sent");
-            })
-            .catch((err) => {
-              console.log(err);
-              req.flash("message", "Error sending to email.");
-              res.redirect("/id");
-            });
-        } else {
-          // User match found do not save
-          throw "User match found";
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-        req.flash("message", "User with that email already exist");
-        res.redirect("/id");
-      });
-    // Check if user exsits
-  }
+  req.flash("message", "Sign up has temporarily been blocked");
+  res.redirect("/id");
+  // const { fullname, username, email, number, password, ref } = req.body;
+  // if (
+  //   !fullname.toString().trim() ||
+  //   !email.toString().trim() ||
+  //   !username.toString().trim() ||
+  //   !number.toString().trim() ||
+  //   !password.toString().trim()
+  // ) {
+  //   // if any is null
+  //   req.flash("message", "Fill in all fields to proceed");
+  //   res.redirect("/id");
+  // } else {
+  //   // Do work
+  //   Schema.User.findOne({
+  //     email,
+  //   })
+  //     .then(async (data) => {
+  //       if (!data) {
+  //         // No user match so can save
+  //         const token = jwt.sign(
+  //           {
+  //             fullname,
+  //             username,
+  //             email,
+  //             number,
+  //             ref,
+  //             password: bcrypt.hashSync(password, 10),
+  //           },
+  //           process.env.JWT_SECRET,
+  //           {
+  //             expiresIn: "30min",
+  //           }
+  //         );
+  //         // Send to user via nodemailer
+  //         sendEmail({
+  //           title: `${username} Verify your email. `,
+  //           email: email,
+  //           message: `Welcome to CrowdFund
+  //           ${username}, <br/> please verify your email
+  //           by clicking the link below, this process
+  //           is automatic.`,
+  //           subject: `Hello ${username} this is your Email Verification`,
+  //           link: `https://www.crowdfunds.com.ng/verify/${token}`,
+  //           // link: `http://localhost:5000/verify/${token}`,
+  //         })
+  //           .then(() => {
+  //             console.log(`Sent email to ${email}`);
+  //             res.render("email_sent");
+  //           })
+  //           .catch((err) => {
+  //             console.log(err);
+  //             req.flash("message", "Error sending to email.");
+  //             res.redirect("/id");
+  //           });
+  //       } else {
+  //         // User match found do not save
+  //         throw "User match found";
+  //       }
+  //     })
+  //     .catch((err) => {
+  //       console.log(err);
+  //       req.flash("message", "User with that email already exist");
+  //       res.redirect("/id");
+  //     });
+  //   // Check if user exsits
+  // }
 });
 
 app.post("/signin", signin, Controller.payAuth);
